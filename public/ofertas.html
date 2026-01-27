@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Ofertas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-file-contract me-2"></i>CRUD Ofertas
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 bg-light vh-100 p-3">
+                <div class="list-group">
+                    <a href="index.html" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="ofertas.html" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-list-alt me-2"></i>Ofertas (CRUD)
+                    </a>
+                    <a href="importar.html" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-import me-2"></i>Importar
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-9 col-lg-10 p-4">
+                <!-- FORMULARIO CRUD -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>
+                            <span id="form-title">Crear Nueva Oferta</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-oferta" data-id="">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Título *</label>
+                                        <input type="text" class="form-control" name="titulo" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Estado *</label>
+                                        <select class="form-select" name="estado" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="pendiente">Pendiente</option>
+                                            <option value="activa">Activa</option>
+                                            <option value="cerrada">Cerrada</option>
+                                            <option value="cancelada">Cancelada</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" name="descripcion" rows="3"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Fecha Límite</label>
+                                        <input type="date" class="form-control" name="fecha_limite">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Presupuesto ($)</label>
+                                        <input type="number" class="form-control" name="presupuesto" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    <span id="btn-submit">Guardar Oferta</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="resetForm()" id="btn-cancelar" style="display:none;">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- LISTA DE OFERTAS -->
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Ofertas Registradas</h5>
+                        <span class="badge bg-light text-dark" id="contador-ofertas">Cargando...</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="lista-ofertas">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando ofertas...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA VER DETALLES -->
+    <div class="modal fade" id="modalDetalles" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Detalles de Oferta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detalles-contenido">
+                    Cargando...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const API_BASE = 'http://localhost/PHP/licitacion/api.php';
+        const modalDetalles = new bootstrap.Modal(document.getElementById('modalDetalles'));
+
+        // CARGAR OFERTAS
+        async function cargarOfertas() {
+            try {
+                const response = await fetch(`${API_BASE}?url=ofertas`);
+                const ofertas = await response.json();
+
+                if (!ofertas.length) {
+                    document.getElementById('lista-ofertas').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>No hay ofertas registradas
+                        </div>
+                    `;
+                    document.getElementById('contador-ofertas').textContent = '0 ofertas';
+                    return;
+                }
+
+                document.getElementById('contador-ofertas').textContent = `${ofertas.length} ofertas`;
+
+                let html = `
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Título</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Límite</th>
+                                    <th>Presupuesto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                ofertas.forEach(oferta => {
+                    html += `
+                        <tr>
+                            <td><strong>#${oferta.id}</strong></td>
+                            <td>${oferta.titulo}</td>
+                            <td>${(oferta.descripcion || '').substring(0, 40)}${oferta.descripcion && oferta.descripcion.length > 40 ? '...' : ''}</td>
+                            <td><span class="badge ${getBadgeClass(oferta.estado)}">${oferta.estado}</span></td>
+                            <td>${oferta.fecha_limite || '—'}</td>
+                            <td>${oferta.presupuesto ? '$' + oferta.presupuesto.toLocaleString() : '—'}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info" onclick="verOferta(${oferta.id})" title="Ver">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-warning" onclick="editarOferta(${oferta.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="eliminarOferta(${oferta.id})" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table></div>';
+                document.getElementById('lista-ofertas').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('lista-ofertas').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function getBadgeClass(estado) {
+            const clases = {
+                'activa': 'bg-success',
+                'pendiente': 'bg-warning',
+                'cerrada': 'bg-secondary',
+                'cancelada': 'bg-danger'
+            };
+            return clases[estado] || 'bg-info';
+        }
+
+        // CREAR/ACTUALIZAR OFERTA
+        document.getElementById('form-oferta').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const datos = Object.fromEntries(formData);
+            const id = this.dataset.id;
+            const isEdit = !!id;
+
+            try {
+                const url = isEdit ? `${API_BASE}?url=ofertas/${id}` : `${API_BASE}?url=ofertas`;
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await response.json();
+
+                if (resultado.success || resultado.id) {
+                    alert(`✅ Oferta ${isEdit ? 'actualizada' : 'creada'} exitosamente`);
+                    resetForm();
+                    cargarOfertas();
+                } else {
+                    alert('❌ Error: ' + (resultado.error || 'Error desconocido'));
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        });
+
+        // VER OFERTA
+        async function verOferta(id) {
+            try {
+                const response = await fetch(`${API_BASE}?url=ofertas/${id}`);
+                const oferta = await response.json();
+
+                if (oferta.error) {
+                    alert('Error: ' + oferta.error);
+                    return;
+                }
+
+                document.getElementById('detalles-contenido').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> ${oferta.id}</p>
+                            <p><strong>Título:</strong> ${oferta.titulo}</p>
+                            <p><strong>Estado:</strong> <span class="badge ${getBadgeClass(oferta.estado)}">${oferta.estado}</span></p>
+                            <p><strong>Creado:</strong> ${oferta.created_at}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Fecha Límite:</strong> ${oferta.fecha_limite || 'No definida'}</p>
+                            <p><strong>Presupuesto:</strong> ${oferta.presupuesto ? '$' + oferta.presupuesto.toLocaleString() : 'No definido'}</p>
+                            ${oferta.updated_at ? `<p><strong>Actualizado:</strong> ${oferta.updated_at}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <strong>Descripción:</strong>
+                        <p class="border rounded p-3 bg-light">${oferta.descripcion || 'Sin descripción'}</p>
+                    </div>
+                `;
+                
+                modalDetalles.show();
+            } catch (error) {
+                alert('Error al cargar detalles: ' + error.message);
+            }
+        }
+        
+        // EDITAR OFERTA
+        async function editarOferta(id) {
+            try {
+                const response = await fetch(`${API_BASE}?url=ofertas/${id}`);
+                const oferta = await response.json();
+                
+                if (oferta.error) {
+                    alert('Error: ' + oferta.error);
+                    return;
+                }
+                
+                // Rellenar formulario
+                const form = document.getElementById('form-oferta');
+                form.dataset.id = id;
+                
+                document.getElementById('form-title').textContent = 'Editar Oferta #' + id;
+                document.getElementById('btn-submit').textContent = 'Actualizar Oferta';
+                document.getElementById('btn-cancelar').style.display = 'inline-block';
+                
+                // Llenar campos
+                Object.keys(oferta).forEach(key => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = oferta[key] || '';
+                    }
+                });
+                
+                // Scroll al formulario
+                form.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                alert('Error al cargar para editar: ' + error.message);
+            }
+        }
+        
+        // ELIMINAR OFERTA
+        async function eliminarOferta(id) {
+            if (!confirm(`¿Está seguro de eliminar la oferta #${id}? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}?url=ofertas/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    alert('✅ Oferta eliminada exitosamente');
+                    cargarOfertas();
+                } else {
+                    alert('❌ Error: ' + (resultado.error || 'Error al eliminar'));
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+        
+        // RESET FORM
+        function resetForm() {
+            const form = document.getElementById('form-oferta');
+            form.reset();
+            form.dataset.id = '';
+            document.getElementById('form-title').textContent = 'Crear Nueva Oferta';
+            document.getElementById('btn-submit').textContent = 'Guardar Oferta';
+            document.getElementById('btn-cancelar').style.display = 'none';
+        }
+        
+        // INICIAR
+        document.addEventListener('DOMContentLoaded', cargarOfertas);
+    </script>
+</body>
+
+</html>

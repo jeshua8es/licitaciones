@@ -1,0 +1,132 @@
+/* Estilos para tablas */
+
+.table-responsive {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background-color: var(--gray-100);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: var(--gray-700);
+    padding: var(--spacing-md);
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+.table tbody td {
+    padding: var(--spacing-md);
+    vertical-align: middle;
+    border-top: 1px solid var(--border-color);
+}
+
+.table tbody tr:first-child td {
+    border-top: none;
+}
+
+
+/* Estilos específicos para la tabla de ofertas */
+
+.table-hover tbody tr:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+
+/* Acciones en tabla */
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-outline-info {
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.btn-outline-warning {
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+
+/* Responsividad para tablas */
+
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+    }
+    .table thead {
+        display: none;
+    }
+    .table,
+    .table tbody,
+    .table tr,
+    .table td {
+        display: block;
+        width: 100%;
+    }
+    .table tr {
+        margin-bottom: var(--spacing-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-sm);
+    }
+    .table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: var(--spacing-md);
+        width: 45%;
+        padding-right: var(--spacing-md);
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+}

@@ -1,0 +1,232 @@
+<?php
+// routes/api.php - ACTUALIZADO para manejar CRUD completo
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// RUTAS ABSOLUTAS
+$base_dir = 'C:/xampp/htdocs/PHP/licitacion';
+$controllers_dir = $base_dir . '/app/controllers/';
+
+// VERIFICAR DIRECTORIO
+if (!is_dir($controllers_dir)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Directorio de controladores no encontrado']);
+    exit;
+}
+
+// OBTENER ENDPOINT
+$url = $_GET['url'] ?? '';
+$url = trim($url, '/');
+$parts = explode('/', $url);
+$endpoint = $parts[0] ?? '';
+$id = $parts[1] ?? null;
+
+// SI NO HAY ENDPOINT, MOSTRAR DOCUMENTACIÓN
+if (empty($endpoint)) {
+    echo json_encode([
+        'api' => 'Sistema de Licitaciones - API',
+        'version' => '1.0',
+        'endpoints' => [
+            'GET    /segments' => 'Listar segmentos',
+            'GET    /families' => 'Listar familias',
+            'GET    /classes' => 'Listar clases',
+            'GET    /products' => 'Listar productos',
+            'GET    /actividades' => 'Listar actividades UNSPSC',
+            'GET    /ofertas' => 'Listar ofertas (con filtros)',
+            'GET    /ofertas/{id}' => 'Ver detalle oferta',
+            'POST   /ofertas' => 'Crear oferta',
+            'PUT    /ofertas/{id}' => 'Actualizar oferta',
+            'DELETE /ofertas/{id}' => 'Eliminar oferta'
+        ]
+    ]);
+    exit;
+}
+
+// MAPEO DE CONTROLADORES
+$controllers = [
+    'segments' => 'SegmentController',
+    'families' => 'FamilyController',
+    'classes' => 'ClassController',
+    'products' => 'ProductController',
+    'actividades' => 'ActividadController',
+    'ofertas' => 'OfertaController'
+];
+
+// ... después del mapeo de controladores, antes de instanciar
+
+// MANEJAR RUTAS ESPECIALES PARA DOCUMENTOS
+if ($endpoint === 'documentos') {
+    $controller_name = 'OfertaDocumentoController';
+    $controller_file = $controllers_dir . $controller_name . '.php';
+    
+    if (!file_exists($controller_file)) {
+        http_response_code(500);
+        echo json_encode(['error' => "Controlador '$controller_name' no encontrado"]);
+        exit;
+    }
+    
+    require_once $controller_file;
+}
+
+// También manejar /ofertas/{id}/documentos
+if ($endpoint === 'ofertas' && isset($parts[2]) && $parts[2] === 'documentos') {
+    $controller_name = 'OfertaDocumentoController';
+    $controller_file = $controllers_dir . $controller_name . '.php';
+    
+    if (!file_exists($controller_file)) {
+        http_response_code(500);
+        echo json_encode(['error' => "Controlador '$controller_name' no encontrado"]);
+        exit;
+    }
+    
+    require_once $controller_file;
+    
+    $controller = new $controller_name();
+    $oferta_id = $parts[1];
+    
+    if ($method === 'get') {
+        $controller->index($oferta_id);
+    } elseif ($method === 'post') {
+        $controller->store($oferta_id);
+    } else {
+        http_response_code(405);
+        echo json_encode(['error' => 'Método no permitido']);
+    }
+    exit;
+}
+
+if (!isset($controllers[$endpoint])) {
+    http_response_code(404);
+    echo json_encode(['error' => "Endpoint '$endpoint' no existe"]);
+    exit;
+}
+
+$controller_name = $controllers[$endpoint];
+$controller_file = $controllers_dir . $controller_name . '.php';
+$base_controller = $controllers_dir . 'Controller.php';
+
+// VERIFICAR ARCHIVOS
+if (!file_exists($controller_file)) {
+    http_response_code(500);
+    echo json_encode(['error' => "Controlador '$controller_name' no encontrado"]);
+    exit;
+}
+
+// CARGAR ELOQUENT
+$eloquent_path = $base_dir . '/bootstrap/eloquent.php';
+if (file_exists($eloquent_path)) {
+    require_once $eloquent_path;
+}
+
+// CARGAR CONTROLADORES
+if (file_exists($base_controller)) {
+    require_once $base_controller;
+}
+require_once $controller_file;
+
+// VERIFICAR CLASE
+if (!class_exists($controller_name)) {
+    http_response_code(500);
+    echo json_encode(['error' => "Clase '$controller_name' no definida"]);
+    exit;
+}
+
+// INSTANCIAR CONTROLADOR
+$controller = new $controller_name();
+
+// DETERMINAR MÉTODO A LLAMAR
+$method = strtolower($_SERVER['REQUEST_METHOD']);
+
+if ($endpoint === 'ofertas') {
+    // Para el controlador de ofertas, manejar todos los métodos CRUD
+    if ($id !== null) {
+        switch ($method) {
+            case 'get':
+                if (method_exists($controller, 'show')) {
+                    $controller->show($id);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Método show no disponible']);
+                }
+                break;
+                
+            case 'put':
+            case 'post': // Algunos clients usan POST para actualizar
+                if (method_exists($controller, 'update')) {
+                    $controller->update($id);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Método update no disponible']);
+                }
+                break;
+                
+            case 'delete':
+                if (method_exists($controller, 'destroy')) {
+                    $controller->destroy($id);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Método destroy no disponible']);
+                }
+                break;
+                
+            default:
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+        }
+    } else {
+        // Sin ID - listar o crear
+        switch ($method) {
+            case 'get':
+                if (method_exists($controller, 'index')) {
+                    $controller->index();
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Método index no disponible']);
+                }
+                break;
+                
+            case 'post':
+                if (method_exists($controller, 'store')) {
+                    $controller->store();
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['error' => 'Método store no disponible']);
+                }
+                break;
+                
+            default:
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+        }
+    }
+} else {
+    // Para otros controladores, solo GET
+    if ($method === 'get') {
+        if ($id !== null && method_exists($controller, 'show')) {
+            $controller->show($id);
+        } elseif (method_exists($controller, 'index')) {
+            $controller->index();
+        } else {
+            echo json_encode([
+                'success' => true,
+                'message' => "$controller_name funcionando",
+                'methods' => get_class_methods($controller)
+            ]);
+        }
+    } else {
+        http_response_code(405);
+        echo json_encode(['error' => 'Solo GET permitido para este endpoint']);
+    }
+}

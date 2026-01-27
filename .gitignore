@@ -1,0 +1,82 @@
+# .gitignore para proyecto PHP MVC con Eloquent y Vue.js
+
+# ==================== DEPENDENCIAS ====================
+/vendor/           # Dependencias de Composer (Eloquent, etc.)
+/node_modules/     # Dependencias de Node.js (si usas npm)
+/composer.lock     # Lock file de Composer (opcional)
+/package-lock.json # Lock file de npm
+/yarn.lock         # Lock file de yarn
+
+# ==================== ARCHIVOS DE ENTORNO ====================
+.env               # Variables de entorno
+.env.*
+.env.local
+.env.development
+.env.production
+.env.testing
+
+# ==================== ARCHIVOS DEL SISTEMA ====================
+.DS_Store         # macOS
+Thumbs.db         # Windows
+desktop.ini       # Windows
+*.swp             # Archivos temporales Vim
+*.swo
+~$*               # Archivos temporales Office
+
+# ==================== ARCHIVOS DE IDE ====================
+.idea/            # PHPStorm
+.vscode/          # Visual Studio Code
+.phpunit.result.cache
+.project
+.settings/
+
+# ==================== ARCHIVOS DE LOGS ====================
+*.log
+logs/
+error_log
+storage/logs/
+
+# ==================== ARCHIVOS DE CACHÉ ====================
+cache/
+*.cache
+storage/framework/cache/
+storage/framework/views/
+
+# ==================== ARCHIVOS DE SISTEMA ====================
+.htaccess         # Si no quieres versionar configuraciones locales
+public/.htaccess
+
+# ==================== ARCHIVOS DE SUBIDA ====================
+uploads/
+public/uploads/
+storage/app/public/
+public/storage/
+
+# ==================== ARCHIVOS DE CONFIGURACIÓN LOCAL ====================
+app/config/database.local.php
+config/database.local.php
+
+# ==================== ARCHIVOS DE BACKUP ====================
+*.bak
+*.backup
+*.old
+database/*.backup
+
+# ==================== ARCHIVOS DE COMPILACIÓN ====================
+dist/
+build/
+public/build/
+public/js/app.js      # Si compilas Vue.js
+public/css/app.css    # Si compilas CSS
+
+# ==================== ARCHIVOS TEMPORALES ====================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ==================== ARCHIVOS DE PRUEBA ====================
+*.test
+*.spec
+coverage/
+phpunit.xml

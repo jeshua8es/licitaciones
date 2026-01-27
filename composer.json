@@ -1,0 +1,15 @@
+{
+    "name": "suplos/licitacion",
+    "description": "Sistema de licitaciones - Prueba técnica",
+    "type": "project",
+    "require": {
+        "illuminate/database": "6.*",
+        "illuminate/events": "6.*",
+        "phpoffice/phpexcel": "^1.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
