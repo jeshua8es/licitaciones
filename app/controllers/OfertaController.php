@@ -164,59 +164,105 @@ class OfertaController extends Controller
     }
     public function actualizar($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $oferta = Oferta::find($id);
+        try {
+            // 1. Validar que exista al menos 1 documento
+            $documentosExistentes = \app\models\Documento::where('licitacion_id', $id)->count();
 
-                if (!$oferta) {
-                    throw new \Exception('Oferta no encontrada');
+            // Contar nuevos archivos
+            $nuevosArchivos = 0;
+            if (isset($_FILES['documentos']) && is_array($_FILES['documentos']['name'])) {
+                foreach ($_FILES['documentos']['name'] as $index => $nombre) {
+                    if (!empty($nombre) && $_FILES['documentos']['error'][$index] === UPLOAD_ERR_OK) {
+                        $nuevosArchivos++;
+                    }
                 }
+            }
 
-                // Validar datos básicos
-                $this->validarOferta($_POST);
+            // REGLA PDF: En edición debe haber al menos 1 documento
+            if ($documentosExistentes === 0 && $nuevosArchivos === 0) {
+                throw new \Exception('Para guardar cambios en una oferta existente, debe adjuntar al menos 1 documento (PDF o ZIP)');
+            }
 
-                // Validar que haya al menos 1 documento (en edición es obligatorio según requerimientos)
-                if (empty($_FILES) && (!isset($_POST['documentos_existentes']) || empty($_POST['documentos_existentes']))) {
-                    throw new \Exception('Debe adjuntar al menos 1 documento');
-                }
+            // 2. Actualizar la oferta
+            $oferta = Oferta::find($id);
+            if (!$oferta) {
+                throw new \Exception('Oferta no encontrada');
+            }
 
-                // Actualizar datos básicos
-                $oferta->objeto = $_POST['objeto'];
-                $oferta->descripcion = $_POST['descripcion'];
-                $oferta->moneda = $_POST['moneda'];
-                $oferta->presupuesto = $_POST['presupuesto'];
-                $oferta->actividad_id = $_POST['actividad_id'];
-                $oferta->fecha_inicio = $_POST['fecha_inicio'];
-                $oferta->hora_inicio = $_POST['hora_inicio'];
-                $oferta->fecha_cierre = $_POST['fecha_cierre'];
-                $oferta->hora_cierre = $_POST['hora_cierre'];
-                $oferta->estado = $_POST['estado'] ?? $oferta->estado;
-                $oferta->actualizado_en = date('Y-m-d H:i:s');
+            // Actualizar campos de la oferta
+            $oferta->objeto = $_POST['objeto'] ?? '';
+            $oferta->descripcion = $_POST['descripcion'] ?? '';
+            $oferta->moneda = $_POST['moneda'] ?? '';
+            $oferta->presupuesto = $_POST['presupuesto'] ?? 0;
+            $oferta->actividad_id = $_POST['actividad_id'] ?? null;
+            $oferta->fecha_inicio = $_POST['fecha_inicio'] ?? '';
+            $oferta->hora_inicio = $_POST['hora_inicio'] ?? '';
+            $oferta->fecha_cierre = $_POST['fecha_cierre'] ?? '';
+            $oferta->hora_cierre = $_POST['hora_cierre'] ?? '';
+            $oferta->estado = $_POST['estado'] ?? 'Pendiente';
 
-                // Guardar cambios
-                if ($oferta->save()) {
-                    // Procesar documentos (implementación básica)
-                    if (!empty($_FILES)) {
-                        $this->procesarDocumentos($oferta->id, $_FILES);
+            if (!$oferta->save()) {
+                throw new \Exception('Error al actualizar la oferta');
+            }
+
+            // 3. Procesar nuevos documentos si los hay
+            if ($nuevosArchivos > 0) {
+                foreach ($_FILES['documentos']['name'] as $index => $nombre) {
+                    if (empty($nombre) || $_FILES['documentos']['error'][$index] !== UPLOAD_ERR_OK) {
+                        continue;
                     }
 
-                    $_SESSION['success'] = "Oferta actualizada correctamente";
-                    $this->redirect(BASE_URL . '/ofertas/ver/' . $id);
-                }
-            } catch (\Exception $e) {
-                // Recargar datos para mostrar en el formulario
-                $actividades = Actividad::all();
-                $oferta = Oferta::find($id);
-                $documentos = []; // En un sistema real, cargaría documentos existentes
+                    // Validar tipo de archivo
+                    $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+                    $permitidos = ['pdf', 'zip'];
 
-                $this->view('ofertas/editar', [
-                    'error' => $e->getMessage(),
-                    'oferta' => $oferta,
-                    'actividades' => $actividades,
-                    'documentos' => $documentos,
-                    'BASE_URL' => BASE_URL
-                ]);
+                    if (!in_array($extension, $permitidos)) {
+                        throw new \Exception('Solo se permiten archivos PDF o ZIP');
+                    }
+
+                    // Validar tamaño (10MB)
+                    if ($_FILES['documentos']['size'][$index] > 10485760) {
+                        throw new \Exception('El archivo excede el tamaño máximo de 10MB');
+                    }
+
+                    // Crear nombre único
+                    $nombreUnico = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $nombre);
+                    $destino = 'uploads/' . $nombreUnico;
+
+                    // Crear carpeta uploads si no existe
+                    if (!is_dir('uploads')) {
+                        mkdir('uploads', 0777, true);
+                    }
+
+                    // Mover archivo
+                    if (!move_uploaded_file($_FILES['documentos']['tmp_name'][$index], $destino)) {
+                        throw new \Exception('Error al subir el archivo: ' . $nombre);
+                    }
+
+                    // Guardar en BD
+                    $documento = new \app\models\Documento();
+                    $documento->licitacion_id = $id;
+                    $documento->titulo = $_POST['titulo_documento'][$index] ?? 'Documento';
+                    $documento->descripcion = $_POST['descripcion_documento'][$index] ?? '';
+                    $documento->archivo = $nombreUnico;
+
+                    if (!$documento->save()) {
+                        // Si falla guardar en BD, eliminar el archivo
+                        unlink($destino);
+                        throw new \Exception('Error al guardar el documento en la base de datos');
+                    }
+                }
             }
+
+            // 4. Éxito
+            $_SESSION['success'] = 'Oferta actualizada correctamente';
+            header('Location: ' . BASE_URL . '/oferta/editar/' . $id);
+            exit;
+        } catch (\Exception $e) {
+            // 5. Error
+            $_SESSION['error'] = 'Error al guardar los cambios: ' . $e->getMessage();
+            header('Location: ' . BASE_URL . '/oferta/editar/' . $id);
+            exit;
         }
     }
 

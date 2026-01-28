@@ -5,7 +5,8 @@
     "require": {
         "illuminate/database": "6.*",
         "illuminate/events": "6.*",
-        "phpoffice/phpexcel": "^1.8"
+        "phpoffice/phpexcel": "^1.8",
+        "phpoffice/phpspreadsheet": "^5.4"
     },
     "autoload": {
         "psr-4": {

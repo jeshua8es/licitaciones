@@ -2,6 +2,9 @@
 // index.php - ENRUTADOR MVC COMPATIBLE CON ELOQUENT
 session_start();
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 // EN EL ENCABEZADO de index.php, después de session_start();
 
 
@@ -60,12 +63,45 @@ $route = parse_url($route, PHP_URL_PATH);
 // Quitar slash inicial
 $route = ltrim($route, '/');
 
+$rutasEspecificas = [
+    'actividades/cargar' => ['ActividadController', 'mostrarFormulario'],
+    'actividades/importar' => ['ActividadController', 'importar'],
+    'actividades/listar' => ['ActividadController', 'listar'],
+    'actividades' => ['ActividadController', 'index'], // Para AJAX
+];
+
+// Verificar si la ruta coincide con alguna ruta específica
+foreach ($rutasEspecificas as $rutaPatron => $controladorAccion) {
+    if ($route === $rutaPatron) {
+        $controller_name = $controladorAccion[0];
+        $action = $controladorAccion[1];
+        $id = null;
+        
+        // Cargar controlador
+        $controller_file = APP_PATH . '/controllers/' . $controller_name . '.php';
+        
+        if (file_exists($controller_file)) {
+            require_once $controller_file;
+            $controller_class = 'App\\Controllers\\' . $controller_name;
+            
+            if (class_exists($controller_class)) {
+                $controller = new $controller_class();
+                if (method_exists($controller, $action)) {
+                    $controller->$action();
+                    exit; // Importante: salir después de ejecutar
+                }
+            }
+        }
+        break;
+    }
+}
+
 // Ruta por defecto
 if (empty($route)) {
     $route = 'dashboard';
 }
 
-// Dividir la ruta
+
 // Dividir la ruta
 $route_parts = explode('/', trim($route, '/'));
 $controller_name = !empty($route_parts[0]) ? ucfirst($route_parts[0]) . 'Controller' : 'DashboardController';
@@ -74,6 +110,7 @@ $id = isset($route_parts[2]) ? $route_parts[2] : null;
 
 // DEBUG TEMPORAL - QUITAR DESPUÉS
 error_log("RUTA DEBUG: route='$route', controller='$controller_name', action='$action', id='$id'");
+
 
 // MAPEO DE ACCIONES (SOLUCIÓN PARA 'editor' -> 'editar')
 $actionMappings = [

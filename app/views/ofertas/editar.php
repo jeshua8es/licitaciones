@@ -30,6 +30,7 @@ if (is_object($oferta)) {
         .character-counter.danger { color: #dc3545; }
     </style>
 </head>
+
 <body>
     <!-- Menú de Navegación -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
@@ -85,7 +86,13 @@ if (is_object($oferta)) {
 
         <!-- Formulario Principal -->
         <form method="POST" action="<?= $BASE_URL ?>/ofertas/actualizar/<?= $oferta['id'] ?>" 
-              @submit.prevent="validarFormulario" ref="formPrincipal">
+              enctype="multipart/form-data" id="formPrincipal">
+            
+            <!-- Campos de archivo REALES (ocultos, serán llenados por Vue) -->
+            <div id="campos-archivos-reales" style="display: none;"></div>
+            
+            <!-- Campo para contar documentos -->
+            <input type="hidden" name="total_documentos" id="total_documentos" value="0">
             
             <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
             <div class="card mb-4">
@@ -305,6 +312,10 @@ if (is_object($oferta)) {
                                     <i class="bi bi-file-earmark-text me-2"></i>
                                     <strong>{{ doc.titulo }}</strong>
                                     <small class="text-muted ms-2">{{ doc.descripcion }}</small>
+                                    <br>
+                                    <small v-if="doc.archivoNombre" class="text-muted">
+                                        <i class="bi bi-file-earmark"></i> {{ doc.archivoNombre }}
+                                    </small>
                                 </div>
                                 <div>
                                     <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -345,7 +356,8 @@ if (is_object($oferta)) {
                          @dragover.prevent="dragover = true" 
                          @dragleave="dragover = false"
                          @drop.prevent="manejarDrop"
-                         :class="{ 'dragover': dragover }">
+                         :class="{ 'dragover': dragover }"
+                         @click="seleccionarArchivoDesdeDrop">
                         <i class="bi bi-cloud-arrow-up" style="font-size: 2rem;"></i>
                         <p class="mt-2">Arrastre y suelte archivos aquí</p>
                         <small class="text-muted">o haga clic para seleccionar</small>
@@ -378,7 +390,7 @@ if (is_object($oferta)) {
                     </a>
                 </div>
                 <div>
-                    <button type="submit" class="btn btn-success" :disabled="!formularioValido || guardando">
+                    <button type="button" class="btn btn-success" @click="validarFormulario" :disabled="!formularioValido || guardando">
                         <span v-if="guardando">
                             <span class="spinner-border spinner-border-sm" role="status"></span>
                             Guardando...
@@ -452,14 +464,17 @@ if (is_object($oferta)) {
                 },
                 documentoValido() {
                     return this.nuevoDocumento.titulo && 
+                           this.nuevoDocumento.titulo.trim().length > 0 &&
                            this.nuevoDocumento.archivo && 
                            this.nuevoDocumento.titulo.length <= 100 &&
                            (!this.nuevoDocumento.descripcion || this.nuevoDocumento.descripcion.length <= 200);
                 },
                 formularioValido() {
                     return this.objeto && 
+                           this.objeto.trim().length > 0 &&
                            this.objeto.length <= 150 &&
                            this.descripcion && 
+                           this.descripcion.trim().length > 0 &&
                            this.descripcion.length <= 400 &&
                            this.moneda &&
                            this.presupuesto > 0 &&
@@ -492,6 +507,9 @@ if (is_object($oferta)) {
                     if (file) {
                         this.validarArchivo(file);
                     }
+                },
+                seleccionarArchivoDesdeDrop() {
+                    this.$refs.dropInput.click();
                 },
                 manejarDrop(event) {
                     this.dragover = false;
@@ -527,8 +545,8 @@ if (is_object($oferta)) {
                         titulo: this.nuevoDocumento.titulo,
                         descripcion: this.nuevoDocumento.descripcion,
                         archivoNombre: this.nuevoDocumento.archivoNombre,
-                        // En un sistema real, aquí se subiría el archivo al servidor
-                        // Por ahora solo guardamos la referencia
+                        archivoFile: this.nuevoDocumento.archivo,
+                        esNuevo: true
                     });
                     
                     // Limpiar formulario
@@ -552,42 +570,88 @@ if (is_object($oferta)) {
                         this.documentos.splice(index, 1);
                     }
                 },
-                validarFormulario() {
+                validarFormulario(event) {
                     if (!this.formularioValido) {
                         alert('Por favor complete todos los campos requeridos correctamente.');
                         return;
                     }
-                    
+
                     if (this.documentos.length < 1) {
                         alert('Debe adjuntar al menos 1 documento.');
                         return;
                     }
-                    
-                    // Enviar formulario
+
                     this.guardando = true;
+
+                    // 1. Crear FormData
+                    const formData = new FormData();
                     
-                    // Crear FormData para enviar archivos
-                    const formData = new FormData(this.$refs.formPrincipal);
+                    // 2. Agregar campos normales del formulario
+                    const formElements = document.getElementById('formPrincipal').elements;
                     
-                    // Agregar documentos (en un sistema real, aquí se enviarían los archivos)
+                    for (let element of formElements) {
+                        if (element.name && !element.disabled && element.type !== 'file' && element.type !== 'submit' && element.type !== 'button') {
+                            if (element.type === 'checkbox' || element.type === 'radio') {
+                                if (element.checked) {
+                                    formData.append(element.name, element.value);
+                                }
+                            } else {
+                                formData.append(element.name, element.value);
+                            }
+                        }
+                    }
+                    
+                    // 3. Agregar documentos REALES al FormData
+                    const archivosContainer = document.getElementById('campos-archivos-reales');
+                    archivosContainer.innerHTML = '';
+                    
+                    let contadorNuevos = 0;
                     this.documentos.forEach((doc, index) => {
-                        formData.append(`documentos[${index}][titulo]`, doc.titulo);
-                        formData.append(`documentos[${index}][descripcion]`, doc.descripcion);
-                        // Nota: Para subir archivos reales necesitaríamos enviar el File object
+                        if (doc.esNuevo && doc.archivoFile) {
+                            // Es un archivo nuevo que se va a subir
+                            formData.append(`nuevos_documentos[${contadorNuevos}][titulo]`, doc.titulo);
+                            formData.append(`nuevos_documentos[${contadorNuevos}][descripcion]`, doc.descripcion || '');
+                            formData.append(`archivos[${contadorNuevos}]`, doc.archivoFile);
+                            contadorNuevos++;
+                        }
                     });
                     
-                    // Enviar mediante AJAX
+                    // 4. Agregar contador
+                    formData.append('total_nuevos_documentos', contadorNuevos);
+                    document.getElementById('total_documentos').value = this.documentos.length;
+                    formData.append('total_documentos', this.documentos.length);
+                    
+                    // 5. Enviar mediante AJAX
                     axios.post('<?= $BASE_URL ?>/ofertas/actualizar/<?= $oferta['id'] ?>', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
                     })
                     .then(response => {
-                        window.location.href = '<?= $BASE_URL ?>/ofertas/ver/<?= $oferta['id'] ?>';
+                        console.log('Respuesta:', response.data);
+                        if (response.data.success) {
+                            window.location.href = '<?= $BASE_URL ?>/ofertas/ver/<?= $oferta['id'] ?>';
+                        } else {
+                            alert('Error: ' + (response.data.message || 'Error desconocido'));
+                            this.guardando = false;
+                        }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al guardar los cambios: ' + (error.response?.data?.message || 'Error desconocido'));
+                        console.error('Error completo:', error);
+                        console.error('Respuesta error:', error.response);
+                        
+                        let mensajeError = 'Error al guardar los cambios';
+                        if (error.response) {
+                            if (error.response.data && error.response.data.message) {
+                                mensajeError = error.response.data.message;
+                            } else if (error.response.data && error.response.data.error) {
+                                mensajeError = error.response.data.error;
+                            } else if (error.response.status === 422) {
+                                mensajeError = 'Error de validación: ' + JSON.stringify(error.response.data.errors);
+                            }
+                        }
+                        
+                        alert(mensajeError);
                         this.guardando = false;
                     });
                 }

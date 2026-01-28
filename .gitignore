@@ -2,6 +2,7 @@
 
 # ==================== DEPENDENCIAS ====================
 /vendor/           # Dependencias de Composer (Eloquent, etc.)
+/uploads/          # Archivos de subida
 /node_modules/     # Dependencias de Node.js (si usas npm)
 /composer.lock     # Lock file de Composer (opcional)
 /package-lock.json # Lock file de npm
