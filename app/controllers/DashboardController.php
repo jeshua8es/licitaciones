@@ -42,11 +42,9 @@ class DashboardController extends Controller
             $pendientes = 1;
             $cerradas = 1;
             
-            $ultimas_ofertas = [
-                ['id' => 1, 'consecutivo' => 'O-0001-24', 'objeto' => 'Oferta Demo 1', 'estado' => 'activa', 'creado_en' => '2024-01-15'],
-                ['id' => 2, 'consecutivo' => 'O-0002-24', 'objeto' => 'Oferta Demo 2', 'estado' => 'pendiente', 'creado_en' => '2024-01-14'],
-                ['id' => 3, 'consecutivo' => 'O-0003-24', 'objeto' => 'Oferta Demo 3', 'estado' => 'cerrada', 'creado_en' => '2024-01-13'],
-            ];
+            $ultimas_ofertas = Oferta::orderBy('creado_en', 'desc')
+                                     ->limit(3)
+                                     ->get();
             
             // Datos de ejemplo para actividades
             $total_actividades = 0;
