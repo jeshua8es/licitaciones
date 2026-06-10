@@ -1,16 +1,12 @@
 <?php
 // index.php - ENRUTADOR MVC COMPATIBLE CON ELOQUENT
-session_start();
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-// EN EL ENCABEZADO de index.php, después de session_start();
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
-ini_set('display_errors', 1);
-session_start();
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 
 // ==================== CONFIGURACIÓN ====================
 define('BASE_PATH', dirname(__FILE__));
@@ -104,12 +100,19 @@ if (empty($route)) {
 
 // Dividir la ruta
 $route_parts = explode('/', trim($route, '/'));
+if (!empty($route_parts[0])) {
+    $routeAliases = [
+        'ofertas' => 'oferta'
+    ];
+
+    if (isset($routeAliases[$route_parts[0]])) {
+        $route_parts[0] = $routeAliases[$route_parts[0]];
+    }
+}
+
 $controller_name = !empty($route_parts[0]) ? ucfirst($route_parts[0]) . 'Controller' : 'DashboardController';
 $action = isset($route_parts[1]) ? $route_parts[1] : 'index';
 $id = isset($route_parts[2]) ? $route_parts[2] : null;
-
-// DEBUG TEMPORAL - QUITAR DESPUÉS
-error_log("RUTA DEBUG: route='$route', controller='$controller_name', action='$action', id='$id'");
 
 
 // MAPEO DE ACCIONES (SOLUCIÓN PARA 'editor' -> 'editar')

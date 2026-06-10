@@ -1,9 +1,9 @@
 <?php
 // routes/api.php - ACTUALIZADO para manejar CRUD completo
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -15,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// RUTAS ABSOLUTAS
-$base_dir = 'C:/xampp/htdocs/PHP/licitacion';
+// RUTAS BASE
+$base_dir = dirname(__DIR__);
 $controllers_dir = $base_dir . '/app/controllers/';
 
 // VERIFICAR DIRECTORIO
@@ -32,6 +32,25 @@ $url = trim($url, '/');
 $parts = explode('/', $url);
 $endpoint = $parts[0] ?? '';
 $id = $parts[1] ?? null;
+$method = strtolower($_SERVER['REQUEST_METHOD']);
+
+$eloquent_path = $base_dir . '/bootstrap/eloquent.php';
+if (file_exists($eloquent_path)) {
+    require_once $eloquent_path;
+}
+
+$resolveControllerClass = function ($controllerName) {
+    if (class_exists($controllerName)) {
+        return $controllerName;
+    }
+
+    $namespaced = 'App\\Controllers\\' . $controllerName;
+    if (class_exists($namespaced)) {
+        return $namespaced;
+    }
+
+    return null;
+};
 
 // SI NO HAY ENDPOINT, MOSTRAR DOCUMENTACIÓN
 if (empty($endpoint)) {
@@ -93,7 +112,14 @@ if ($endpoint === 'ofertas' && isset($parts[2]) && $parts[2] === 'documentos') {
     
     require_once $controller_file;
     
-    $controller = new $controller_name();
+    $controllerClass = $resolveControllerClass($controller_name);
+    if ($controllerClass === null) {
+        http_response_code(500);
+        echo json_encode(['error' => "Clase '$controller_name' no definida"]);
+        exit;
+    }
+
+    $controller = new $controllerClass();
     $oferta_id = $parts[1];
     
     if ($method === 'get') {
@@ -124,12 +150,6 @@ if (!file_exists($controller_file)) {
     exit;
 }
 
-// CARGAR ELOQUENT
-$eloquent_path = $base_dir . '/bootstrap/eloquent.php';
-if (file_exists($eloquent_path)) {
-    require_once $eloquent_path;
-}
-
 // CARGAR CONTROLADORES
 if (file_exists($base_controller)) {
     require_once $base_controller;
@@ -137,17 +157,15 @@ if (file_exists($base_controller)) {
 require_once $controller_file;
 
 // VERIFICAR CLASE
-if (!class_exists($controller_name)) {
+if (!$resolveControllerClass($controller_name)) {
     http_response_code(500);
     echo json_encode(['error' => "Clase '$controller_name' no definida"]);
     exit;
 }
 
 // INSTANCIAR CONTROLADOR
-$controller = new $controller_name();
-
-// DETERMINAR MÉTODO A LLAMAR
-$method = strtolower($_SERVER['REQUEST_METHOD']);
+$controllerClass = $resolveControllerClass($controller_name);
+$controller = new $controllerClass();
 
 if ($endpoint === 'ofertas') {
     // Para el controlador de ofertas, manejar todos los métodos CRUD
@@ -166,6 +184,8 @@ if ($endpoint === 'ofertas') {
             case 'post': // Algunos clients usan POST para actualizar
                 if (method_exists($controller, 'update')) {
                     $controller->update($id);
+                } elseif (method_exists($controller, 'actualizar')) {
+                    $controller->actualizar($id);
                 } else {
                     http_response_code(405);
                     echo json_encode(['error' => 'Método update no disponible']);
@@ -175,6 +195,8 @@ if ($endpoint === 'ofertas') {
             case 'delete':
                 if (method_exists($controller, 'destroy')) {
                     $controller->destroy($id);
+                } elseif (method_exists($controller, 'eliminar')) {
+                    $controller->eliminar($id);
                 } else {
                     http_response_code(405);
                     echo json_encode(['error' => 'Método destroy no disponible']);
@@ -200,6 +222,8 @@ if ($endpoint === 'ofertas') {
             case 'post':
                 if (method_exists($controller, 'store')) {
                     $controller->store();
+                } elseif (method_exists($controller, 'guardar')) {
+                    $controller->guardar();
                 } else {
                     http_response_code(405);
                     echo json_encode(['error' => 'Método store no disponible']);

@@ -1,55 +1,60 @@
 # Sistema de Licitaciones
 
 ## Descripción
-Módulo de licitaciones en línea desarrollado con PHP 7.0+ (MVC puro) + Vue.js 2.6+ + Bootstrap 5.2+. (se utilizo xammp con mysql)
+Módulo de licitaciones desarrollado con PHP 7+ en arquitectura MVC, sin framework fullstack, usando Eloquent ORM para persistencia y Vue.js para interacciones de frontend.
 
-## Características implementadas
-Dashboard con estadísticas  
-Listado de ofertas con paginación  
-CRUD completo (Crear, Leer, Actualizar, Eliminar)  
-Generación automática de consecutivo (O-0001-25)  
-Validaciones frontend (Vue.js) y backend (PHP)  
-Arquitectura MVC con Eloquent ORM  
-Sistema de enrutamiento propio  
-
-## endpoints
-GET	/dashboard	Dashboard principal
-GET	/oferta	Listado completo
-GET	/oferta/ver/{id}	Detalle de oferta
-GET	/oferta/crear	Formulario creación
-GET	/oferta/editar/{id}	Formulario edición
-POST	/oferta/guardar	Guardar nueva
-PUT	/oferta/actualizar/{id}	Actualizar existente
-DELETE	/oferta/eliminar/{id}	Eliminar oferta
-
-## Instalación
-
-1. Clonar repositorio
-# 1. Clonar en servidor
-git clone https://github.com/jeshua8es/licitaciones.git /var/www/licitaciones
-
-# 2. Configurar permisos
-chown -R www-data:www-data /var/www/licitaciones
-chmod -R 755 /var/www/licitaciones/storage
-
-# 3. Configurar virtual host
-* Importar `database/schema.sql` en MySQL
-* Configurar conexión en `config/database.php`
-* Acceder a `http://localhost/licitacion/`
-
-URL: http://localhost/licitaciones/
-
-Dashboard: http://localhost/licitaciones/dashboard
-
-Usuario demo: Ver datos en database/database.sql
-
-## Rutas principales
-- `/` o `/dashboard` - Dashboard principal
-- `/oferta/ver/{id}` - Ver detalle de oferta
-- `/oferta/editor/{id}` - Editar oferta
-- `/oferta/eliminar/{id}` - Eliminar oferta (POST)
+## Características
+- Dashboard con estadísticas de ofertas y actividades.
+- CRUD de ofertas: crear, listar, ver, editar y eliminar.
+- Generación automática de consecutivo tipo O-0001-26.
+- Validaciones en frontend y backend.
+- Carga e importación de actividades UNSPSC desde Excel.
+- Gestión de documentos por oferta (PDF y ZIP).
 
 ## Tecnologías
-- **Backend**: PHP 7.0+ (sin frameworks), MVC, Eloquent ORM
-- **Frontend**: Vue.js 2.6+, Axios, Bootstrap 5.2+
-- **Base de datos**: MySQL/MariaDB
+- Backend: PHP 7+, MVC propio, Eloquent.
+- Frontend: Vue.js 2.6, Axios, Bootstrap 5.
+- Base de datos: MySQL / MariaDB.
+
+## Requisitos
+- PHP 7.4 o superior.
+- Composer.
+- MySQL o MariaDB.
+- Apache (XAMPP recomendado para entorno local).
+
+## Instalación
+1. Clonar el repositorio.
+2. Ejecutar composer install en la raíz del proyecto.
+3. Crear la base de datos licitaciones.
+4. Importar el script SQL ubicado en database/licitaciones.sql.
+5. Configurar credenciales de base de datos en config/database.php.
+6. Levantar Apache y MySQL.
+7. Acceder a la aplicación en:
+	http://localhost/PHP/licitacion/
+
+## Rutas Web principales
+- GET /dashboard
+- GET /oferta
+- GET /oferta/crear
+- POST /oferta/guardar
+- GET /oferta/ver/{id}
+- GET /oferta/editar/{id}
+- POST /oferta/actualizar/{id}
+- POST /oferta/eliminar/{id}
+
+## API disponible
+Archivo de entrada: routes/api.php
+
+Rutas principales:
+- GET ofertas
+- GET ofertas/{id}
+- POST ofertas
+- PUT ofertas/{id}
+- DELETE ofertas/{id}
+- GET ofertas/{id}/documentos
+- POST ofertas/{id}/documentos
+
+## Entregables del proyecto
+- Código fuente en repositorio Git.
+- Carpeta bd con script SQL de creación.
+- Este README con instrucciones de ejecución.

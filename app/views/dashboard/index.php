@@ -1,6 +1,8 @@
 <?php
 // app/views/dashboard/index.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Mostrar mensaje de éxito o error si existe
 $mensaje = '';
@@ -134,33 +136,33 @@ if (!empty($_SESSION['success'])) {
                                     <?php foreach ($ultimas_ofertas as $oferta): ?>
                                         <?php
                                         $badge_class = 'bg-secondary';
-                                        if ($oferta['estado'] == 'activa') $badge_class = 'bg-success';
-                                        if ($oferta['estado'] == 'pendiente') $badge_class = 'bg-warning';
+                                        if ($oferta->estado == 'activa') $badge_class = 'bg-success';
+                                        if ($oferta->estado == 'pendiente') $badge_class = 'bg-warning';
                                         ?>
-                                        <tr onclick="window.location='<?= BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>'" style="cursor: pointer;">
-                                            <td class="fw-bold"><?= $oferta['consecutivo'] ?? 'N/A' ?></td>
-                                            <td><?= htmlspecialchars($oferta['objeto']) ?></td>
+                                        <tr onclick="window.location='<?= BASE_URL ?>/oferta/ver/<?= $oferta->id ?>'" style="cursor: pointer;">
+                                            <td class="fw-bold"><?= $oferta->consecutivo ?? 'N/A' ?></td>
+                                            <td><?= htmlspecialchars($oferta->objeto) ?></td>
                                             <td>
                                                 <span class="badge <?= $badge_class ?>">
-                                                    <?= ucfirst($oferta['estado']) ?>
+                                                    <?= ucfirst($oferta->estado) ?>
                                                 </span>
                                             </td>
-                                            <td><?= date('d/m/Y', strtotime($oferta['creado_en'])) ?></td>
+                                            <td><?= date('d/m/Y', strtotime($oferta->creado_en)) ?></td>
                                             <td>
-                                                <a href="<?= BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>"
+                                                <a href="<?= BASE_URL ?>/oferta/ver/<?= $oferta->id ?>"
                                                     class="btn btn-sm btn-info"
                                                     title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="<?= BASE_URL ?>/oferta/editar/<?= $oferta['id'] ?>"
+                                                <a href="<?= BASE_URL ?>/oferta/editar/<?= $oferta->id ?>"
                                                     class="btn btn-sm btn-warning"
                                                     title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="<?php echo BASE_URL; ?>/oferta/eliminar/<?php echo $oferta['id']; ?>"
+                                                <form action="<?php echo BASE_URL; ?>/oferta/eliminar/<?php echo $oferta->id; ?>"
                                                     method="POST"
                                                     style="display: inline;"
-                                                    onsubmit="return confirm('¿Está seguro de eliminar la oferta <?= htmlspecialchars($oferta['consecutivo'] ?? '') ?>?');">
+                                                    onsubmit="return confirm('¿Está seguro de eliminar la oferta <?= htmlspecialchars($oferta->consecutivo ?? '') ?>?');">
                                                     <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
                                                 </form>
                                             </td>

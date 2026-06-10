@@ -1,6 +1,5 @@
 <?php
-// app/controllers/ClassController.php
-require_once 'Controller.php';
+namespace App\Controllers;
 
 class ClassController extends Controller
 {

@@ -1,6 +1,5 @@
 <?php
-// app/controllers/FamilyController.php
-require_once 'Controller.php';
+namespace App\Controllers;
 
 class FamilyController extends Controller
 {

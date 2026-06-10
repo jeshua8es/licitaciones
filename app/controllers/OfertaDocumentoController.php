@@ -18,7 +18,7 @@ class OfertaDocumentoController
             Oferta::findOrFail($oferta_id);
             
             // Obtener documentos
-            $documentos = OfertaDocumento::where('oferta_id', $oferta_id)
+            $documentos = OfertaDocumento::where('licitacion_id', $oferta_id)
                 ->orderBy('creado_en', 'desc')
                 ->get();
             
@@ -100,7 +100,7 @@ class OfertaDocumentoController
             
             // Guardar en base de datos
             $documento = OfertaDocumento::create([
-                'oferta_id' => $oferta_id,
+                'licitacion_id' => $oferta_id,
                 'titulo' => substr($_POST['titulo'] ?? '', 0, 100),
                 'descripcion' => substr($_POST['descripcion'] ?? '', 0, 200),
                 'archivo' => 'documentos/' . $nombreArchivo, // Ruta relativa
@@ -374,7 +374,7 @@ class OfertaDocumentoController
     public function count($oferta_id)
     {
         try {
-            $count = OfertaDocumento::where('oferta_id', $oferta_id)->count();
+            $count = OfertaDocumento::where('licitacion_id', $oferta_id)->count();
             
             echo json_encode([
                 'success' => true,

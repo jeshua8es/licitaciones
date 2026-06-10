@@ -42,7 +42,7 @@ if (is_object($oferta)) {
                 <a class="nav-link" href="<?= $BASE_URL ?>/dashboard">
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
-                <a class="nav-link" href="<?= $BASE_URL ?>/ofertas">
+                <a class="nav-link" href="<?= $BASE_URL ?>/oferta">
                     <i class="bi bi-list-ul"></i> Ofertas
                 </a>
                 <a class="nav-link active" href="#">
@@ -66,7 +66,7 @@ if (is_object($oferta)) {
                 <p class="text-muted">Modifique los datos de la licitación</p>
             </div>
             <div>
-                <a href="<?= $BASE_URL ?>/ofertas/ver/<?= $oferta['id'] ?>" class="btn btn-secondary">
+                <a href="<?= $BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>" class="btn btn-secondary">
                     <i class="bi bi-x-circle"></i> Cancelar
                 </a>
             </div>
@@ -85,7 +85,7 @@ if (is_object($oferta)) {
         <?php endif; ?>
 
         <!-- Formulario Principal -->
-        <form method="POST" action="<?= $BASE_URL ?>/ofertas/actualizar/<?= $oferta['id'] ?>" 
+        <form method="POST" action="<?= $BASE_URL ?>/oferta/actualizar/<?= $oferta['id'] ?>" 
               enctype="multipart/form-data" id="formPrincipal">
             
             <!-- Campos de archivo REALES (ocultos, serán llenados por Vue) -->
@@ -385,7 +385,7 @@ if (is_object($oferta)) {
             <!-- Botones de acción -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="<?= $BASE_URL ?>/ofertas/ver/<?= $oferta['id'] ?>" class="btn btn-secondary">
+                    <a href="<?= $BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Volver al detalle
                     </a>
                 </div>
@@ -622,7 +622,7 @@ if (is_object($oferta)) {
                     formData.append('total_documentos', this.documentos.length);
                     
                     // 5. Enviar mediante AJAX
-                    axios.post('<?= $BASE_URL ?>/ofertas/actualizar/<?= $oferta['id'] ?>', formData, {
+                    axios.post('<?= $BASE_URL ?>/oferta/actualizar/<?= $oferta['id'] ?>', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -630,7 +630,7 @@ if (is_object($oferta)) {
                     .then(response => {
                         console.log('Respuesta:', response.data);
                         if (response.data.success) {
-                            window.location.href = '<?= $BASE_URL ?>/ofertas/ver/<?= $oferta['id'] ?>';
+                            window.location.href = '<?= $BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>';
                         } else {
                             alert('Error: ' + (response.data.message || 'Error desconocido'));
                             this.guardando = false;

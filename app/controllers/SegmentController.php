@@ -1,6 +1,5 @@
 <?php
-// app/controllers/SegmentController.php
-require_once 'Controller.php';
+namespace App\Controllers;
 
 class SegmentController extends Controller
 {

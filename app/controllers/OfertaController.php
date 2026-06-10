@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Oferta;
 use App\Models\Actividad;
+use App\Models\Documento;
 
 class OfertaController extends Controller
 {
@@ -166,7 +167,7 @@ class OfertaController extends Controller
     {
         try {
             // 1. Validar que exista al menos 1 documento
-            $documentosExistentes = \app\models\Documento::where('licitacion_id', $id)->count();
+            $documentosExistentes = Documento::where('licitacion_id', $id)->count();
 
             // Contar nuevos archivos
             $nuevosArchivos = 0;
@@ -240,7 +241,7 @@ class OfertaController extends Controller
                     }
 
                     // Guardar en BD
-                    $documento = new \app\models\Documento();
+                    $documento = new Documento();
                     $documento->licitacion_id = $id;
                     $documento->titulo = $_POST['titulo_documento'][$index] ?? 'Documento';
                     $documento->descripcion = $_POST['descripcion_documento'][$index] ?? '';
