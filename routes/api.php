@@ -83,6 +83,44 @@ $controllers = [
     'ofertas' => 'OfertaController'
 ];
 
+if ($endpoint === 'ofertas' && $method === 'get') {
+    try {
+        if ($id !== null) {
+            $oferta = \App\Models\Oferta::find($id);
+
+            if (!$oferta) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Oferta no encontrada'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => true,
+                    'data' => $oferta
+                ]);
+            }
+        } else {
+            $ofertas = \App\Models\Oferta::orderBy('creado_en', 'desc')->get();
+
+            echo json_encode([
+                'success' => true,
+                'data' => $ofertas,
+                'count' => $ofertas->count()
+            ]);
+        }
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error al consultar ofertas',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
 // ... después del mapeo de controladores, antes de instanciar
 
 // MANEJAR RUTAS ESPECIALES PARA DOCUMENTOS
