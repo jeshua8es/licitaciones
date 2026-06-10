@@ -18,8 +18,7 @@ class DashboardController extends Controller
             // Obtener últimas ofertas
             $ultimas_ofertas = Oferta::orderBy('creado_en', 'desc')
                                      ->take(5)
-                                     ->get()
-                                     ->toArray();
+                                     ->get();
             
             // Obtener estadísticas de actividades UNSPSC
             $total_actividades = Actividad::count();
