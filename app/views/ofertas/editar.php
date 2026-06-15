@@ -112,17 +112,19 @@ if (is_object($oferta)) {
                         <!-- Estado -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Estado *</label>
-                            <select name="estado" class="form-select" v-model="estado" required>
+                            <select name="estado" class="form-select" v-model="estado" :class="{ 'is-invalid': campoInvalido('estado') }" required>
                                 <option value="activa" <?= $oferta['estado'] == 'activa' ? 'selected' : '' ?>>Activa</option>
                                 <option value="pendiente" <?= $oferta['estado'] == 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
                                 <option value="cerrada" <?= $oferta['estado'] == 'cerrada' ? 'selected' : '' ?>>Cerrada</option>
                             </select>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('estado')">El estado es obligatorio.</small>
                         </div>
                         
                         <!-- Objeto -->
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Objeto de la Licitación *</label>
                             <input type="text" name="objeto" class="form-control" 
+                                :class="{ 'is-invalid': campoInvalido('objeto') }"
                                    v-model="objeto" 
                                    @input="actualizarContador('objeto')"
                                    maxlength="150" 
@@ -134,12 +136,14 @@ if (is_object($oferta)) {
                                     {{ objeto.length }}/150 caracteres
                                 </small>
                             </div>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('objeto')">El objeto es obligatorio y debe tener maximo 150 caracteres.</small>
                         </div>
                         
                         <!-- Descripción -->
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Descripción / Alcance *</label>
                             <textarea name="descripcion" class="form-control" rows="4"
+                                      :class="{ 'is-invalid': campoInvalido('descripcion') }"
                                       v-model="descripcion"
                                       @input="actualizarContador('descripcion')"
                                       maxlength="400" 
@@ -150,16 +154,18 @@ if (is_object($oferta)) {
                                     {{ descripcion.length }}/400 caracteres
                                 </small>
                             </div>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('descripcion')">La descripcion es obligatoria y debe tener maximo 400 caracteres.</small>
                         </div>
                         
                         <!-- Moneda y Presupuesto -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Moneda *</label>
-                            <select name="moneda" class="form-select" v-model="moneda" required>
+                            <select name="moneda" class="form-select" v-model="moneda" :class="{ 'is-invalid': campoInvalido('moneda') }" required>
                                 <option value="COP" <?= $oferta['moneda'] == 'COP' ? 'selected' : '' ?>>COP - Peso Colombiano</option>
                                 <option value="USD" <?= $oferta['moneda'] == 'USD' ? 'selected' : '' ?>>USD - Dólar Estadounidense</option>
                                 <option value="EUR" <?= $oferta['moneda'] == 'EUR' ? 'selected' : '' ?>>EUR - Euro</option>
                             </select>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('moneda')">Debe seleccionar una moneda.</small>
                         </div>
                         
                         <div class="col-md-6 mb-3">
@@ -167,6 +173,7 @@ if (is_object($oferta)) {
                             <div class="input-group">
                                 <span class="input-group-text">{{ moneda }}</span>
                                 <input type="number" name="presupuesto" class="form-control"
+                                       :class="{ 'is-invalid': campoInvalido('presupuesto') }"
                                        v-model="presupuesto"
                                        step="0.01" 
                                        min="0" 
@@ -174,12 +181,13 @@ if (is_object($oferta)) {
                                        value="<?= $oferta['presupuesto'] ?>">
                             </div>
                             <small class="text-muted">Valor estimado para la licitación</small>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('presupuesto')">El presupuesto debe ser mayor a 0.</small>
                         </div>
                         
                         <!-- Actividad -->
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Actividad (Clasificador UNSPSC) *</label>
-                            <select name="actividad_id" class="form-select" v-model="actividad_id" required>
+                            <select name="actividad_id" class="form-select" v-model="actividad_id" :class="{ 'is-invalid': campoInvalido('actividad_id') }" required>
                                 <option value="">Seleccione una actividad</option>
                                 <?php foreach ($actividades as $actividad): ?>
                                 <?php 
@@ -196,6 +204,7 @@ if (is_object($oferta)) {
                                 <?php endforeach; ?>
                             </select>
                             <small class="text-muted">Clasificación según estándar UNSPSC de Naciones Unidas</small>
+                            <small class="text-danger d-block mt-1" v-if="campoInvalido('actividad_id')">Debe seleccionar una actividad UNSPSC.</small>
                         </div>
                     </div>
                 </div>
@@ -218,20 +227,24 @@ if (is_object($oferta)) {
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Fecha Inicio *</label>
-                                        <input type="date" name="fecha_inicio" class="form-control"
+                                             <input type="date" name="fecha_inicio" class="form-control"
+                                                 :class="{ 'is-invalid': campoInvalido('fecha_inicio') }"
                                                v-model="fecha_inicio"
                                                :min="fechaHoy"
                                                required
                                                value="<?= $oferta['fecha_inicio'] ?>">
                                         <small class="text-muted">Fecha de apertura del proceso</small>
+                                             <small class="text-danger d-block mt-1" v-if="campoInvalido('fecha_inicio')">La fecha de inicio es obligatoria.</small>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Hora Inicio *</label>
-                                        <input type="time" name="hora_inicio" class="form-control"
+                                             <input type="time" name="hora_inicio" class="form-control"
+                                                 :class="{ 'is-invalid': campoInvalido('hora_inicio') }"
                                                v-model="hora_inicio"
                                                required
                                                value="<?= $oferta['hora_inicio'] ?>">
                                         <small class="text-muted">Hora exacta de inicio (formato 24h)</small>
+                                             <small class="text-danger d-block mt-1" v-if="campoInvalido('hora_inicio')">La hora de inicio es obligatoria.</small>
                                     </div>
                                 </div>
                             </div>
@@ -246,20 +259,24 @@ if (is_object($oferta)) {
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Fecha Cierre *</label>
-                                        <input type="date" name="fecha_cierre" class="form-control"
+                                             <input type="date" name="fecha_cierre" class="form-control"
+                                                 :class="{ 'is-invalid': campoInvalido('fecha_cierre') || !!validarFechas }"
                                                v-model="fecha_cierre"
                                                :min="fecha_inicio"
                                                required
                                                value="<?= $oferta['fecha_cierre'] ?>">
                                         <small class="text-muted">Fecha límite para presentar ofertas</small>
+                                             <small class="text-danger d-block mt-1" v-if="campoInvalido('fecha_cierre')">La fecha de cierre es obligatoria.</small>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Hora Cierre *</label>
-                                        <input type="time" name="hora_cierre" class="form-control"
+                                             <input type="time" name="hora_cierre" class="form-control"
+                                                 :class="{ 'is-invalid': campoInvalido('hora_cierre') || !!validarFechas }"
                                                v-model="hora_cierre"
                                                required
                                                value="<?= $oferta['hora_cierre'] ?>">
                                         <small class="text-muted">Hora exacta de cierre (formato 24h)</small>
+                                             <small class="text-danger d-block mt-1" v-if="campoInvalido('hora_cierre')">La hora de cierre es obligatoria.</small>
                                     </div>
                                 </div>
                             </div>
@@ -356,21 +373,14 @@ if (is_object($oferta)) {
                          @dragover.prevent="dragover = true" 
                          @dragleave="dragover = false"
                          @drop.prevent="manejarDrop"
-                         :class="{ 'dragover': dragover }"
+                        :class="[{ 'dragover': dragover }, { 'border border-danger': documentos.length < 1 }]"
                          @click="seleccionarArchivoDesdeDrop">
                         <i class="bi bi-cloud-arrow-up" style="font-size: 2rem;"></i>
                         <p class="mt-2">Arrastre y suelte archivos aquí</p>
                         <small class="text-muted">o haga clic para seleccionar</small>
                         <input type="file" class="d-none" ref="dropInput" @change="seleccionarArchivoDrop" accept=".pdf,.zip">
                     </div>
-                    
-                    <!-- Botón para agregar documento -->
-                    <div class="text-end mt-3">
-                        <button type="button" class="btn btn-primary" @click="agregarDocumento" 
-                                :disabled="!documentoValido">
-                            <i class="bi bi-plus-circle"></i> Agregar Documento
-                        </button>
-                    </div>
+                    <small class="text-danger d-block mt-2" v-if="documentos.length < 1">Debe adjuntar al menos 1 documento para habilitar Guardar Cambios.</small>
                     
                     <!-- Contador de documentos -->
                     <div class="mt-3 text-center">
@@ -488,6 +498,32 @@ if (is_object($oferta)) {
                 }
             },
             methods: {
+                campoInvalido(campo) {
+                    switch (campo) {
+                        case 'estado':
+                            return !this.estado;
+                        case 'objeto':
+                            return !this.objeto || !this.objeto.trim() || this.objeto.length > 150;
+                        case 'descripcion':
+                            return !this.descripcion || !this.descripcion.trim() || this.descripcion.length > 400;
+                        case 'moneda':
+                            return !this.moneda;
+                        case 'presupuesto':
+                            return Number(this.presupuesto) <= 0;
+                        case 'actividad_id':
+                            return !this.actividad_id;
+                        case 'fecha_inicio':
+                            return !this.fecha_inicio;
+                        case 'hora_inicio':
+                            return !this.hora_inicio;
+                        case 'fecha_cierre':
+                            return !this.fecha_cierre;
+                        case 'hora_cierre':
+                            return !this.hora_cierre;
+                        default:
+                            return false;
+                    }
+                },
                 actualizarContador(campo) {
                     // Solo para reactividad
                 },
@@ -534,10 +570,21 @@ if (is_object($oferta)) {
                     
                     this.nuevoDocumento.archivo = file;
                     this.nuevoDocumento.archivoNombre = file.name;
+
+                    // Si no hay titulo, usar nombre de archivo sin extension
+                    if (!this.nuevoDocumento.titulo || !this.nuevoDocumento.titulo.trim()) {
+                        const nombreBase = file.name.replace(/\.[^/.]+$/, '');
+                        this.nuevoDocumento.titulo = nombreBase.substring(0, 100);
+                    }
+
+                    // UX: al seleccionar archivo, se agrega automaticamente
+                    this.agregarDocumento(true);
                 },
-                agregarDocumento() {
+                agregarDocumento(auto = false) {
                     if (!this.documentoValido) {
-                        alert('Complete todos los campos requeridos del documento');
+                        if (!auto) {
+                            alert('Complete todos los campos requeridos del documento');
+                        }
                         return;
                     }
                     
@@ -609,9 +656,9 @@ if (is_object($oferta)) {
                     this.documentos.forEach((doc, index) => {
                         if (doc.esNuevo && doc.archivoFile) {
                             // Es un archivo nuevo que se va a subir
-                            formData.append(`nuevos_documentos[${contadorNuevos}][titulo]`, doc.titulo);
-                            formData.append(`nuevos_documentos[${contadorNuevos}][descripcion]`, doc.descripcion || '');
-                            formData.append(`archivos[${contadorNuevos}]`, doc.archivoFile);
+                            formData.append(`titulo_documento[${contadorNuevos}]`, doc.titulo);
+                            formData.append(`descripcion_documento[${contadorNuevos}]`, doc.descripcion || '');
+                            formData.append(`documentos[${contadorNuevos}]`, doc.archivoFile);
                             contadorNuevos++;
                         }
                     });
@@ -624,13 +671,15 @@ if (is_object($oferta)) {
                     // 5. Enviar mediante AJAX
                     axios.post('<?= $BASE_URL ?>/oferta/actualizar/<?= $oferta['id'] ?>', formData, {
                         headers: {
-                            'Content-Type': 'multipart/form-data'
+                            'Content-Type': 'multipart/form-data',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
                     })
                     .then(response => {
                         console.log('Respuesta:', response.data);
                         if (response.data.success) {
-                            window.location.href = '<?= $BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>';
+                            window.location.href = response.data.redirect || '<?= $BASE_URL ?>/oferta/ver/<?= $oferta['id'] ?>';
                         } else {
                             alert('Error: ' + (response.data.message || 'Error desconocido'));
                             this.guardando = false;

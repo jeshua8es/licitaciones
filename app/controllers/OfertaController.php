@@ -138,6 +138,10 @@ class OfertaController extends Controller
     {
         $oferta = Oferta::find($id);
         $actividades = Actividad::all();
+        $documentos = Documento::where('licitacion_id', $id)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->toArray();
 
         if (!$oferta) {
             $this->view('errors/404', ['message' => 'Oferta no encontrada']);
@@ -147,6 +151,7 @@ class OfertaController extends Controller
         $this->view('ofertas/editar', [
             'oferta' => $oferta,
             'actividades' => $actividades,
+            'documentos' => $documentos,
             'BASE_URL' => BASE_URL
         ]);
     }
@@ -165,6 +170,10 @@ class OfertaController extends Controller
     }
     public function actualizar($id)
     {
+        $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        $isAjax = (strtolower($requestedWith) === 'xmlhttprequest') || (strpos($acceptHeader, 'application/json') !== false);
+
         try {
             // 1. Validar que exista al menos 1 documento
             $documentosExistentes = Documento::where('licitacion_id', $id)->count();
@@ -256,10 +265,26 @@ class OfertaController extends Controller
             }
 
             // 4. Éxito
+            if ($isAjax) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Oferta actualizada correctamente',
+                    'redirect' => BASE_URL . '/oferta/ver/' . $id
+                ]);
+            }
+
             $_SESSION['success'] = 'Oferta actualizada correctamente';
             header('Location: ' . BASE_URL . '/oferta/editar/' . $id);
             exit;
         } catch (\Exception $e) {
+            if ($isAjax) {
+                http_response_code(422);
+                $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+
             // 5. Error
             $_SESSION['error'] = 'Error al guardar los cambios: ' . $e->getMessage();
             header('Location: ' . BASE_URL . '/oferta/editar/' . $id);

@@ -16,6 +16,11 @@ Módulo de licitaciones desarrollado con PHP 7+ en arquitectura MVC, sin framewo
 - Frontend: Vue.js 2.6, Axios, Bootstrap 5.
 - Base de datos: MySQL / MariaDB.
 
+## Implementación Vue.js en flujo MVC
+- La vista de creación de ofertas usa Vue.js para validación reactiva en tiempo real (longitudes, coherencia de fechas y estado de envio) y mantiene el POST tradicional al backend MVC.
+- La vista de edición de ofertas usa Vue.js para validación avanzada, documentos dinamicos y reglas de formulario antes del submit.
+- Se incluyen componentes Vue reutilizables en public/js/components para tabla, filtros, modales y acciones de la UI.
+
 ## Requisitos
 - PHP 7.4 o superior.
 - Composer.
